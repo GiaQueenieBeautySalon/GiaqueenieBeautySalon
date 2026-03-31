@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import React, { useEffect, useState, lazy, Suspense } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CartProvider } from './contexts/CartContext'
@@ -8,50 +8,36 @@ import BottomNav from './components/layout/BottomNav'
 import Footer from './components/layout/Footer'
 import { supabase } from './services/supabaseClient'
 
-// Pages
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Shop from './pages/Shop'
-import Services from './pages/Services'
-import Admin from './pages/Admin'
-import DynamicPage from './pages/DynamicPage'
-import Cart from './pages/cart'
+// Lazy load pages for better performance
+const Home = lazy(() => import('./pages/Home'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Shop = lazy(() => import('./pages/Shop'))
+const Services = lazy(() => import('./pages/Services'))
+const Admin = lazy(() => import('./pages/Admin'))
+const DynamicPage = lazy(() => import('./pages/DynamicPage'))
+const Cart = lazy(() => import('./pages/cart'))
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-primary-gold border-t-transparent rounded-full animate-spin" />
+  </div>
+)
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-primary-gold">Loading...</div></div>
+  if (loading) return <LoadingSpinner />
   if (!user) return <Navigate to="/login" />
   return children
 }
 
 const AdminRoute = ({ children }) => {
   const { user, isAdmin, loading } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-primary-gold">Loading...</div></div>
+  if (loading) return <LoadingSpinner />
   if (!user || !isAdmin) return <Navigate to="/dashboard" />
   return children
-}
-
-// Custom component to handle conditional footer
-const ConditionalFooter = () => {
-  const location = useLocation()
-  const { user } = useAuth()
-  
-  // Check if current route is dashboard or admin (pages with sidebar)
-  const isDashboardRoute = location.pathname === '/dashboard' || location.pathname === '/admin'
-  
-  // For dashboard routes, we want a different footer behavior
-  if (isDashboardRoute) {
-    return (
-      <div className="dashboard-footer">
-        <Footer />
-      </div>
-    )
-  }
-  
-  // For regular pages, use normal footer
-  return <Footer />
 }
 
 function AppContent() {
@@ -59,6 +45,16 @@ function AppContent() {
 
   useEffect(() => {
     fetchDynamicPages()
+    
+    // Fix: Clear any stale auth state on mount
+    const fixAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        // No session, clear any stale local data
+        localStorage.removeItem('supabase.auth.token')
+      }
+    }
+    fixAuth()
   }, [])
 
   const fetchDynamicPages = async () => {
@@ -71,34 +67,39 @@ function AppContent() {
 
   return (
     <Router>
-      <div className="app-wrapper">
+      <div className="flex flex-col min-h-screen">
         <Navbar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-            {dynamicPages.map(page => (
-              <Route key={page.slug} path={`/${page.slug}`} element={<DynamicPage slug={page.slug} />} />
-            ))}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+        <main className="flex-grow pt-16">
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              {dynamicPages.map(page => (
+                <Route key={page.slug} path={`/${page.slug}`} element={<DynamicPage slug={page.slug} />} />
+              ))}
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Suspense>
         </main>
-        <ConditionalFooter />
+        <Footer />
         <BottomNav />
       </div>
-      <Toaster position="bottom-center" toastOptions={{ 
-        style: { 
-          background: '#1A1A1A', 
-          color: '#FFF', 
-          border: '1px solid #D4AF37' 
-        } 
-      }} />
+      <Toaster 
+        position="bottom-center" 
+        toastOptions={{ 
+          style: { 
+            background: '#1A1A1A', 
+            color: '#FFF', 
+            border: '1px solid #D4AF37' 
+          } 
+        }} 
+      />
     </Router>
   )
 }

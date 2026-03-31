@@ -10,7 +10,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Use esbuild for minification (faster, no extra dependency)
     minify: 'esbuild',
     rollupOptions: {
       output: {
@@ -19,7 +18,6 @@ export default defineConfig({
           supabase: ['@supabase/supabase-js'],
           ui: ['framer-motion', 'react-hot-toast', 'react-icons']
         },
-        // Add hash to filenames for cache busting
         entryFileNames: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash].[ext]'

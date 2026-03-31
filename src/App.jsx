@@ -17,7 +17,7 @@ import Shop from './pages/Shop'
 import Services from './pages/Services'
 import Admin from './pages/Admin'
 import DynamicPage from './pages/DynamicPage'
-import Cart from './pages/Cart'
+import Cart from './pages/cart'
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()

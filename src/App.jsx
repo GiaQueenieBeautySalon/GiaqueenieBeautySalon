@@ -45,17 +45,19 @@ function AppContent() {
   const [dynamicPages, setDynamicPages] = useState([])
   const { user, loading } = useAuth()
 
-  // Run admin setup once when app loads
-  useEffect(() => {
-    const initAdmin = async () => {
-      try {
-        await setupAdminUser()
-      } catch (error) {
-        console.error('Admin setup error:', error)
-      }
+  // src/App.jsx - Update the useEffect that calls setupAdmin
+useEffect(() => {
+  // Run admin setup once but DO NOT auto-login
+  const initAdmin = async () => {
+    try {
+      // Just check/create admin, don't login automatically
+      await setupAdminUser()
+    } catch (error) {
+      console.error('Admin setup error:', error)
     }
-    initAdmin()
-  }, [])
+  }
+  initAdmin()
+}, [])
 
   useEffect(() => {
     fetchDynamicPages()

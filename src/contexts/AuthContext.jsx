@@ -23,10 +23,13 @@ export const AuthProvider = ({ children }) => {
       try {
         console.log('🔐 Initializing auth...')
         
-        // Clear any admin flags on startup
-        localStorage.removeItem('admin_logged_in')
-        localStorage.removeItem('isAdmin')
+        // CRITICAL: Remove any auto-login flags
+        // These flags might be causing auto-login
+        if (localStorage.getItem('admin_auto_login')) {
+          localStorage.removeItem('admin_auto_login')
+        }
         
+        // Only get the existing session - DO NOT auto-create one
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -34,11 +37,11 @@ export const AuthProvider = ({ children }) => {
         }
         
         if (session?.user) {
-          console.log('✅ Session found for:', session.user.email)
+          console.log('✅ Found existing session for:', session.user.email)
           setUser(session.user)
           await checkAdminStatus(session.user.id)
         } else {
-          console.log('❌ No session found')
+          console.log('❌ No session found - user is logged out')
           setUser(null)
           setIsAdmin(false)
         }
@@ -51,16 +54,16 @@ export const AuthProvider = ({ children }) => {
 
     initAuth()
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state changed:', event, session?.user?.email)
       
       if (event === 'SIGNED_OUT') {
-        console.log('User signed out, clearing state')
+        console.log('User signed out')
         setUser(null)
         setIsAdmin(false)
-        localStorage.removeItem('admin_logged_in')
-        localStorage.removeItem('isAdmin')
-      } else if (session?.user) {
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        console.log('User signed in')
         setUser(session.user)
         await checkAdminStatus(session.user.id)
       }
@@ -162,7 +165,6 @@ export const AuthProvider = ({ children }) => {
         console.log('✅ Login successful:', data.user.email)
         setUser(data.user)
         await checkAdminStatus(data.user.id)
-        
         toast.success(`Welcome back, ${cleanUsername}!`)
       }
       
@@ -192,7 +194,7 @@ export const AuthProvider = ({ children }) => {
       
       toast.success('Logged out successfully')
       
-      // Hard reload
+      // Hard reload to clear any remaining state
       window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)

@@ -1,0 +1,349 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Prevent caching issues */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix input focus issues */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* ============================================
+   GLOBAL RESET & FIXES
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  position: relative;
+}
+
+body {
+  @apply bg-dark text-white font-body antialiased;
+  background: linear-gradient(135deg, #050505 0%, #0A0A0A 50%, #111111 100%);
+  min-height: 100vh;
+  overflow-x: hidden !important;
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* ============================================
+   SCROLLBAR STYLES
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-dark-200;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-gold rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #E0BFB8;
+}
+
+/* ============================================
+   COMPONENT STYLES
+   ============================================ */
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-500 hover:bg-white/10 hover:border-primary-gold/50 hover:shadow-2xl hover:-translate-y-1;
+  }
+
+  .btn-primary {
+    @apply px-6 py-2.5 rounded-full font-semibold transition-all duration-300 
+           bg-primary-gold text-black hover:bg-primary-rose hover:shadow-lg 
+           hover:shadow-primary-gold/50 transform hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-2.5 rounded-full font-semibold transition-all duration-300 
+           border-2 border-primary-gold text-primary-gold 
+           hover:bg-primary-gold/20 hover:border-primary-rose hover:text-primary-rose
+           transform hover:scale-105 active:scale-95;
+  }
+
+  .gold-text {
+    @apply text-primary-gold;
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  }
+
+  .gold-gradient {
+    background: linear-gradient(135deg, #D4AF37 0%, #E0BFB8 50%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .input-luxury {
+    @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl 
+           text-white placeholder-white/40 focus:outline-none focus:border-primary-gold 
+           transition-all duration-300;
+  }
+}
+
+/* ============================================
+   LAYOUT FIXES - CRITICAL
+   ============================================ */
+
+/* Main container fixes */
+.container-center {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Fix for all pages with padding */
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-top: 5rem;
+  padding-bottom: 6rem;
+}
+
+/* Desktop padding adjustment */
+@media (min-width: 768px) {
+  .page-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Mobile padding */
+@media (max-width: 767px) {
+  .page-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ============================================
+   DASHBOARD SPECIFIC FIXES
+   ============================================ */
+
+/* Dashboard layout - ensure navbar doesn't overlap */
+.dashboard-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Dashboard sidebar - account for navbar height */
+.dashboard-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 260px;
+  background: #111111;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-y: auto;
+  z-index: 40;
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure sidebar content starts below navbar */
+.dashboard-sidebar > *:first-child {
+  margin-top: 0;
+}
+
+/* Dashboard main content - account for navbar height */
+.dashboard-main {
+  flex: 1;
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  padding: 1.5rem;
+  padding-top: 5rem; /* Account for fixed navbar (h-16 = 4rem, plus extra space) */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dashboard content container */
+.dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+}
+
+/* Welcome banner - ensure it's fully visible */
+.dashboard-content .glass-card:first-child {
+  margin-top: 0;
+}
+
+/* Mobile dashboard adjustments */
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    transform: translateX(-100%);
+    padding-top: 4rem;
+  }
+  
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .dashboard-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+    padding-top: 5rem; /* Keep padding for mobile navbar */
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 769px) {
+  .dashboard-main {
+    padding-top: 5rem; /* Consistent padding on desktop */
+  }
+}
+
+/* Ensure stats cards and content are fully visible */
+.dashboard-content > * {
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-content > *:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Responsive containers */
+@media (min-width: 640px) {
+  .container-sm { max-width: 640px; margin: 0 auto; }
+}
+@media (min-width: 768px) {
+  .container-md { max-width: 768px; margin: 0 auto; }
+}
+@media (min-width: 1024px) {
+  .container-lg { max-width: 1024px; margin: 0 auto; }
+}
+@media (min-width: 1280px) {
+  .container-xl { max-width: 1280px; margin: 0 auto; }
+}
+
+/* Prevent any horizontal scroll */
+.overflow-x-hidden {
+  overflow-x: hidden !important;
+}
+
+/* Ensure all content respects boundaries */
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix for Tailwind margins on mobile */
+@media (max-width: 640px) {
+  .px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .px-6 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .px-8 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+/* Add to your index.css */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure footer stays at bottom */
+footer {
+  margin-top: auto;
+}
+
+/* Dashboard Footer Positioning */
+.dashboard-footer {
+  position: relative;
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  background: #0A0A0A;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .dashboard-footer {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Ensure footer doesn't overlap content */
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1 0 auto;
+}
+
+/* Make sure dashboard content pushes footer down */
+.dashboard-main {
+  padding-bottom: 0;
+}
+
+.dashboard-content {
+  padding-bottom: 2rem;
+}
+
+/* Adjust footer for mobile dashboard */
+@media (max-width: 768px) {
+  .dashboard-footer {
+    margin-left: 0;
+    width: 100%;
+  }
+}

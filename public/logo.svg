@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Background subtle glow -->
+  <circle cx="100" cy="100" r="95" fill="url(#glowGradient)" opacity="0.1"/>
+  
+  <!-- Main Flower Petals - Outer Layer -->
+  <g opacity="0.95">
+    <!-- Petal 1 - Top -->
+    <path d="M100 30 L115 55 L100 80 L85 55 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <!-- Petal 2 - Top Right -->
+    <path d="M130 45 L150 60 L130 75 L110 60 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.85;1;0.85" dur="3s" repeatCount="indefinite" begin="0.2s"/>
+    </path>
+    <!-- Petal 3 - Right -->
+    <path d="M155 80 L175 100 L155 120 L135 100 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" begin="0.4s"/>
+    </path>
+    <!-- Petal 4 - Bottom Right -->
+    <path d="M130 125 L150 140 L130 155 L110 140 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.85;1;0.85" dur="3s" repeatCount="indefinite" begin="0.6s"/>
+    </path>
+    <!-- Petal 5 - Bottom -->
+    <path d="M100 120 L115 145 L100 170 L85 145 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" begin="0.8s"/>
+    </path>
+    <!-- Petal 6 - Bottom Left -->
+    <path d="M70 125 L90 140 L70 155 L50 140 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.85;1;0.85" dur="3s" repeatCount="indefinite" begin="1s"/>
+    </path>
+    <!-- Petal 7 - Left -->
+    <path d="M45 80 L65 100 L45 120 L25 100 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" begin="1.2s"/>
+    </path>
+    <!-- Petal 8 - Top Left -->
+    <path d="M70 45 L90 60 L70 75 L50 60 Z" fill="url(#petalGradient)">
+      <animate attributeName="opacity" values="0.85;1;0.85" dur="3s" repeatCount="indefinite" begin="1.4s"/>
+    </path>
+  </g>
+  
+  <!-- Inner Flower Petals - Second Layer -->
+  <g opacity="0.98">
+    <!-- Inner Petal 1 -->
+    <path d="M100 55 L112 70 L100 85 L88 70 Z" fill="url(#innerPetalGradient)"/>
+    <!-- Inner Petal 2 -->
+    <path d="M120 70 L130 85 L120 100 L110 85 Z" fill="url(#innerPetalGradient)"/>
+    <!-- Inner Petal 3 -->
+    <path d="M130 100 L140 115 L130 130 L120 115 Z" fill="url(#innerPetalGradient)"/>
+    <!-- Inner Petal 4 -->
+    <path d="M100 115 L112 130 L100 145 L88 130 Z" fill="url(#innerPetalGradient)"/>
+    <!-- Inner Petal 5 -->
+    <path d="M80 100 L90 115 L80 130 L70 115 Z" fill="url(#innerPetalGradient)"/>
+    <!-- Inner Petal 6 -->
+    <path d="M80 70 L90 85 L80 100 L70 85 Z" fill="url(#innerPetalGradient)"/>
+  </g>
+  
+  <!-- Center of Flower -->
+  <circle cx="100" cy="100" r="22" fill="url(#centerGradient)">
+    <animate attributeName="r" values="22;23;22" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Center Detail - Sparkle -->
+  <g opacity="0.9">
+    <circle cx="100" cy="100" r="8" fill="#D4AF37">
+      <animate attributeName="r" values="8;10;8" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="100" cy="100" r="4" fill="#FFE4B5"/>
+  </g>
+  
+  <!-- Decorative Diamond Accents -->
+  <g opacity="0.7">
+    <!-- Top Diamond -->
+    <polygon points="100,18 105,28 100,38 95,28" fill="url(#diamondGradient)">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+    </polygon>
+    <!-- Right Diamond -->
+    <polygon points="172,100 182,105 172,110 162,105" fill="url(#diamondGradient)">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+    </polygon>
+    <!-- Bottom Diamond -->
+    <polygon points="100,162 105,172 100,182 95,172" fill="url(#diamondGradient)">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="1s"/>
+    </polygon>
+    <!-- Left Diamond -->
+    <polygon points="28,100 38,105 28,110 18,105" fill="url(#diamondGradient)">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" begin="1.5s"/>
+    </polygon>
+  </g>
+  
+  <!-- Subtle Sparkle Particles -->
+  <g opacity="0.6">
+    <circle cx="65" cy="55" r="1.5" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="135" cy="55" r="1.5" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+    </circle>
+    <circle cx="55" cy="135" r="1.5" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+    </circle>
+    <circle cx="145" cy="135" r="1.5" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin="0.9s"/>
+    </circle>
+    <circle cx="90" cy="45" r="1" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="110" cy="45" r="1" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.5s" repeatCount="indefinite" begin="0.4s"/>
+    </circle>
+    <circle cx="45" cy="90" r="1" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.5s" repeatCount="indefinite" begin="0.8s"/>
+    </circle>
+    <circle cx="155" cy="90" r="1" fill="#D4AF37">
+      <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.5s" repeatCount="indefinite" begin="1.2s"/>
+    </circle>
+  </g>
+  
+  <!-- Definitions for Gradients -->
+  <defs>
+    <!-- Outer Petal Gradient - Gold to Rose Gold -->
+    <radialGradient id="petalGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E0BFB8" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#C9A03D" stop-opacity="0.6"/>
+    </radialGradient>
+    
+    <!-- Inner Petal Gradient - Deeper Gold -->
+    <radialGradient id="innerPetalGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F5E6D3" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#B8860B" stop-opacity="0.7"/>
+    </radialGradient>
+    
+    <!-- Center Gradient - Rich Gold -->
+    <radialGradient id="centerGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE4B5" stop-opacity="1"/>
+      <stop offset="50%" stop-color="#D4AF37" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#B8860B" stop-opacity="0.8"/>
+    </radialGradient>
+    
+    <!-- Diamond Gradient -->
+    <linearGradient id="diamondGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#FFE4B5" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#D4AF37" stop-opacity="0.8"/>
+    </linearGradient>
+    
+    <!-- Background Glow -->
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#E0BFB8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

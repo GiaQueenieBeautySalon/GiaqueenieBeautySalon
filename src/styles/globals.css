@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark text-white font-body antialiased;
+    background: linear-gradient(135deg, #050505 0%, #0A0A0A 50%, #111111 100%);
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-200;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-gold rounded-full;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+  }
+
+  .btn-primary {
+    @apply px-8 py-3 rounded-full font-semibold transition-all duration-300 
+           bg-primary-gold text-black hover:bg-primary-rose hover:shadow-lg 
+           hover:shadow-primary-gold/50 transform hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply px-8 py-3 rounded-full font-semibold transition-all duration-300 
+           border-2 border-primary-gold text-primary-gold 
+           hover:bg-primary-gold/20 hover:border-primary-rose hover:text-primary-rose
+           transform hover:scale-105 active:scale-95;
+  }
+
+  .gold-text {
+    @apply text-primary-gold;
+    text-shadow: 0 0 20px rgba(212,175,55,0.3);
+  }
+}

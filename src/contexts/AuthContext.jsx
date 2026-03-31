@@ -21,20 +21,29 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        console.log('🔐 Initializing auth...')
+        
+        // Clear any admin flags on startup
+        localStorage.removeItem('admin_logged_in')
+        localStorage.removeItem('isAdmin')
+        
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('Session error:', error)
+        }
         
         if (session?.user) {
+          console.log('✅ Session found for:', session.user.email)
           setUser(session.user)
           await checkAdminStatus(session.user.id)
         } else {
-          // Clear any stale admin flags if no session
-          localStorage.removeItem('admin_logged_in')
-          localStorage.removeItem('isAdmin')
+          console.log('❌ No session found')
           setUser(null)
           setIsAdmin(false)
         }
       } catch (error) {
-        console.error('Session error:', error)
+        console.error('Auth init error:', error)
       } finally {
         setLoading(false)
       }
@@ -42,18 +51,18 @@ export const AuthProvider = ({ children }) => {
 
     initAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('Auth state changed:', _event, session?.user?.email)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event, session?.user?.email)
       
-      if (session?.user) {
-        setUser(session.user)
-        await checkAdminStatus(session.user.id)
-      } else {
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out, clearing state')
         setUser(null)
         setIsAdmin(false)
-        // Clear admin flags on logout
         localStorage.removeItem('admin_logged_in')
         localStorage.removeItem('isAdmin')
+      } else if (session?.user) {
+        setUser(session.user)
+        await checkAdminStatus(session.user.id)
       }
       setLoading(false)
     })
@@ -76,8 +85,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       const isUserAdmin = data?.role === 'admin'
+      console.log('👑 Admin status:', isUserAdmin)
       setIsAdmin(isUserAdmin)
-      console.log('Admin status for user:', userId, isUserAdmin)
     } catch (error) {
       console.error('Admin check error:', error)
       setIsAdmin(false)
@@ -134,15 +143,9 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (username, password) => {
     try {
       const cleanUsername = username.trim().toLowerCase()
-      let email = ''
+      const email = `${cleanUsername}@giaqueenie.com`
       
-      if (cleanUsername === 'corner') {
-        email = 'corner@giaqueenie.com'
-      } else {
-        email = `${cleanUsername}@giaqueenie.com`
-      }
-      
-      console.log('Attempting login for:', email)
+      console.log('🔑 Attempting login for:', email)
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
@@ -150,20 +153,17 @@ export const AuthProvider = ({ children }) => {
       })
 
       if (error) {
-        console.error('Login error:', error)
+        console.error('Login error:', error.message)
         toast.error('Invalid username or password')
         throw error
       }
 
       if (data.user) {
+        console.log('✅ Login successful:', data.user.email)
         setUser(data.user)
         await checkAdminStatus(data.user.id)
         
-        if (data.user.email === 'corner@giaqueenie.com') {
-          toast.success('Welcome Admin!')
-        } else {
-          toast.success(`Welcome back, ${cleanUsername}!`)
-        }
+        toast.success(`Welcome back, ${cleanUsername}!`)
       }
       
       return data
@@ -176,25 +176,23 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      console.log('🔄 Signing out...')
+      console.log('🚪 Signing out...')
       
-      // First, sign out from Supabase
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      
-      // Clear all localStorage
-      localStorage.clear()
-      
-      // Clear sessionStorage
-      sessionStorage.clear()
-      
-      // Clear state
+      // Clear state first
       setUser(null)
       setIsAdmin(false)
       
+      // Clear all storage
+      localStorage.clear()
+      sessionStorage.clear()
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
       toast.success('Logged out successfully')
       
-      // Force a full page reload to clear any React state
+      // Hard reload
       window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)

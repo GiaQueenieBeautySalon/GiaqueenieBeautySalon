@@ -13,17 +13,23 @@ const Login = () => {
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    try {
-      await signIn(username, password)
-      navigate('/dashboard')
-    } catch (error) {
-      console.error('Login error:', error)
-    } finally {
-      setLoading(false)
-    }
+  e.preventDefault()
+  setLoading(true)
+  try {
+    console.log('Submitting login for:', username)
+    
+    // Call the signIn function from AuthContext
+    await signIn(username, password)
+    
+    console.log('Login successful, redirecting...')
+    navigate('/dashboard')
+  } catch (error) {
+    console.error('Login error details:', error)
+    // Error already handled by AuthContext
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 pt-20 pb-24">

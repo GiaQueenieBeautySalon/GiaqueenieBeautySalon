@@ -140,46 +140,39 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (username, password) => {
   try {
     console.log('🔐 Attempting login for:', username)
+    console.log('Password length:', password?.length)
     
-    // Special admin login
+    // SPECIAL ADMIN LOGIN - MUST COME FIRST
     if (username === 'corner' && password === 'cornerdooadmin4life') {
-      console.log('👑 Admin login detected')
+      console.log('👑 ADMIN LOGIN DETECTED')
       
-      // First, clear any existing session to avoid conflicts
-      await supabase.auth.signOut()
-      
-      // Small delay to ensure sign out completes
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // Try to sign in
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'corner@giaqueenie.com',
-        password: 'cornerdooadmin4life'
-      })
-      
-      if (error && error.message === 'Invalid login credentials') {
-        console.log('📝 Admin account not found, creating...')
+      try {
+        // First, clear any existing session
+        await supabase.auth.signOut()
+        await new Promise(resolve => setTimeout(resolve, 100))
         
-        // Admin doesn't exist, create it
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        // Try to sign in with email
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: 'corner@giaqueenie.com',
-          password: 'cornerdooadmin4life',
-          options: { 
-            data: { username: 'corner' }
-          }
+          password: 'cornerdooadmin4life'
         })
         
-        if (signUpError) throw signUpError
-        
-        if (signUpData.user) {
-          // Check if user already exists in users table
-          const { data: existingUser } = await supabase
-            .from('users')
-            .select('id')
-            .eq('id', signUpData.user.id)
-            .single()
+        if (error && error.message === 'Invalid login credentials') {
+          console.log('📝 Admin account not found, creating...')
           
-          if (!existingUser) {
+          // Create the admin account
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: 'corner@giaqueenie.com',
+            password: 'cornerdooadmin4life',
+            options: { 
+              data: { username: 'corner' }
+            }
+          })
+          
+          if (signUpError) throw signUpError
+          
+          if (signUpData.user) {
+            // Create user record
             await supabase.from('users').insert([{
               id: signUpData.user.id,
               username: 'corner',
@@ -188,7 +181,52 @@ export const AuthProvider = ({ children }) => {
             }])
             console.log('✅ Admin user created')
           }
+          
+          // Sign in after creation
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: 'corner@giaqueenie.com',
+            password: 'cornerdooadmin4life'
+          })
+          
+          if (loginError) throw loginError
+          
+          localStorage.setItem('isAdmin', 'true')
+          console.log('✅ Admin login successful')
+          toast.success('Welcome Admin!')
+          return loginData
         }
+        
+        if (error) throw error
+        
+        localStorage.setItem('isAdmin', 'true')
+        console.log('✅ Admin login successful')
+        toast.success('Welcome Admin!')
+        return data
+        
+      } catch (error) {
+        console.error('Admin login error:', error)
+        throw error
+      }
+    }
+    
+    // REGULAR USER LOGIN
+    console.log('👤 Regular user login')
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: `${username}@giaqueenie.com`,
+      password: password
+    })
+
+    if (error) throw error
+    
+    console.log('✅ User login successful')
+    toast.success(`Welcome back, ${username}!`)
+    return data
+  } catch (error) {
+    console.error('❌ Login error:', error)
+    toast.error('Invalid username or password')
+    throw error
+  }
+}
         
         // Now sign in
         const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({

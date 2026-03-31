@@ -19,8 +19,7 @@ export const AuthProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    // Check current session
-    const checkSession = async () => {
+    const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         
@@ -29,15 +28,14 @@ export const AuthProvider = ({ children }) => {
           await checkAdminStatus(session.user.id)
         }
       } catch (error) {
-        console.error('Session check error:', error)
+        console.error('Session error:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    checkSession()
+    initAuth()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setUser(session.user)
@@ -67,6 +65,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setIsAdmin(data?.role === 'admin')
+      console.log('Admin status:', data?.role === 'admin')
     } catch (error) {
       console.error('Admin check error:', error)
       setIsAdmin(false)
@@ -111,7 +110,6 @@ export const AuthProvider = ({ children }) => {
 
         if (profileError) {
           console.error('Profile creation error:', profileError)
-          // Don't throw - user might still be able to login
         }
 
         toast.success(`Welcome to GiaQueenie, ${username}!`)
@@ -127,76 +125,39 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (username, password) => {
     try {
       const cleanUsername = username.trim().toLowerCase()
-      const email = `${cleanUsername}@giaqueenie.com`
+      
+      // Special case for admin - check the exact email
+      let email = ''
+      if (cleanUsername === 'corner') {
+        email = 'corner@giaqueenie.com'
+      } else {
+        email = `${cleanUsername}@giaqueenie.com`
+      }
       
       console.log('Attempting login for:', email)
       
-      // Attempt sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password
       })
 
       if (error) {
-        console.error('Auth error:', error)
-        
-        // If user doesn't exist in auth, try to create them
-        if (error.message.includes('Invalid login credentials')) {
-          // Check if this is a valid user in our users table
-          const { data: userData } = await supabase
-            .from('users')
-            .select('username, email')
-            .eq('username', cleanUsername)
-            .single()
-          
-          if (userData) {
-            // User exists in users table but not in auth - create auth account
-            const tempPassword = password || 'temporary123'
-            const { data: newAuth, error: createError } = await supabase.auth.signUp({
-              email: userData.email || email,
-              password: tempPassword,
-              options: {
-                data: { username: cleanUsername }
-              }
-            })
-            
-            if (createError) {
-              console.error('Auth creation error:', createError)
-              toast.error('Account exists but needs setup. Please contact support.')
-              throw createError
-            }
-            
-            if (newAuth.user) {
-              // Update user id to match auth
-              await supabase
-                .from('users')
-                .update({ id: newAuth.user.id })
-                .eq('username', cleanUsername)
-              
-              // Try login again
-              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-                email: userData.email || email,
-                password: tempPassword
-              })
-              
-              if (!retryError && retryData.user) {
-                setUser(retryData.user)
-                await checkAdminStatus(retryData.user.id)
-                toast.success(`Welcome back, ${cleanUsername}!`)
-                return retryData
-              }
-            }
-          }
-        }
-        
+        console.error('Login error:', error)
         toast.error('Invalid username or password')
         throw error
       }
 
       if (data.user) {
+        console.log('Login successful:', data.user.email)
         setUser(data.user)
         await checkAdminStatus(data.user.id)
-        toast.success(`Welcome back, ${cleanUsername}!`)
+        
+        // Check if this is the admin
+        if (data.user.email === 'corner@giaqueenie.com') {
+          toast.success('Welcome Admin!')
+        } else {
+          toast.success(`Welcome back, ${cleanUsername}!`)
+        }
       }
       
       return data
@@ -215,8 +176,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null)
       setIsAdmin(false)
       toast.success('Logged out successfully')
-      
-      // Redirect to home
       window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)

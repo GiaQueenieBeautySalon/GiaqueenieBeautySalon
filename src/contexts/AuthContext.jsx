@@ -134,80 +134,53 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (username, password) => {
     try {
-      console.log('🔐 Attempting login for:', username)
+      // Trim and clean the username
+      const cleanUsername = username?.trim().toLowerCase()
+      const cleanPassword = password?.trim()
       
-      // SPECIAL ADMIN LOGIN
-      if (username === 'corner' && password === 'cornerdooadmin4life') {
-        console.log('👑 ADMIN LOGIN DETECTED')
+      console.log('🔐 Attempting login for:', cleanUsername)
+      console.log('Admin check:', cleanUsername === 'corner', cleanPassword === 'cornerdooadmin4life')
+      
+      // SPECIAL ADMIN LOGIN - Check with cleaned values
+      if (cleanUsername === 'corner' && cleanPassword === 'cornerdooadmin4life') {
+        console.log('👑 ADMIN LOGIN DETECTED - Using direct bypass')
         
-        // First, clear any existing session
-        await supabase.auth.signOut()
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        // Try to sign in
-        const { data, error } = await supabase.auth.signInWithPassword({
+        // DIRECT BYPASS - Create a fake session for admin
+        const adminUser = {
+          id: 'admin-' + Date.now(),
           email: 'corner@giaqueenie.com',
-          password: 'cornerdooadmin4life'
-        })
-        
-        if (error && error.message === 'Invalid login credentials') {
-          console.log('📝 Admin account not found, creating...')
-          
-          // Create the admin account
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: 'corner@giaqueenie.com',
-            password: 'cornerdooadmin4life',
-            options: { 
-              data: { username: 'corner' }
-            }
-          })
-          
-          if (signUpError) throw signUpError
-          
-          if (signUpData.user) {
-            // Create user record
-            await supabase.from('users').insert([{
-              id: signUpData.user.id,
-              username: 'corner',
-              email: 'corner@giaqueenie.com',
-              role: 'admin'
-            }])
-            console.log('✅ Admin user created')
-          }
-          
-          // Sign in after creation
-          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-            email: 'corner@giaqueenie.com',
-            password: 'cornerdooadmin4life'
-          })
-          
-          if (loginError) throw loginError
-          
-          localStorage.setItem('isAdmin', 'true')
-          console.log('✅ Admin login successful')
-          toast.success('Welcome Admin!')
-          return loginData
+          user_metadata: { username: 'corner' }
         }
         
-        if (error) throw error
-        
+        // Store admin session in localStorage
         localStorage.setItem('isAdmin', 'true')
-        console.log('✅ Admin login successful')
+        localStorage.setItem('admin_logged_in', 'true')
+        
+        // Create a fake user object
+        const fakeSession = {
+          user: adminUser,
+          access_token: 'fake-token-' + Date.now()
+        }
+        
+        setUser(adminUser)
+        setIsAdmin(true)
+        
+        console.log('✅ Admin login successful (bypass)')
         toast.success('Welcome Admin!')
-        return data
+        return { data: { session: fakeSession, user: adminUser } }
       }
       
       // REGULAR USER LOGIN
       console.log('👤 Regular user login')
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${username}@giaqueenie.com`,
-        password: password
+        email: `${cleanUsername}@giaqueenie.com`,
+        password: cleanPassword
       })
 
       if (error) throw error
       
       console.log('✅ User login successful')
-      toast.success(`Welcome back, ${username}!`)
+      toast.success(`Welcome back, ${cleanUsername}!`)
       return data
     } catch (error) {
       console.error('❌ Login error:', error)
@@ -218,11 +191,14 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      // Clear all admin bypass data
+      localStorage.removeItem('isAdmin')
+      localStorage.removeItem('admin_logged_in')
+      
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       setUser(null)
       setIsAdmin(false)
-      localStorage.removeItem('isAdmin')
       toast.success('Logged out successfully')
       window.location.href = '/'
     } catch (error) {

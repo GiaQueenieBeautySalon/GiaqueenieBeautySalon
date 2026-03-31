@@ -23,13 +23,6 @@ export const AuthProvider = ({ children }) => {
       try {
         console.log('🔐 Initializing auth...')
         
-        // CRITICAL: Remove any auto-login flags
-        // These flags might be causing auto-login
-        if (localStorage.getItem('admin_auto_login')) {
-          localStorage.removeItem('admin_auto_login')
-        }
-        
-        // Only get the existing session - DO NOT auto-create one
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -37,13 +30,14 @@ export const AuthProvider = ({ children }) => {
         }
         
         if (session?.user) {
-          console.log('✅ Found existing session for:', session.user.email)
+          console.log('✅ Session found for:', session.user.email)
           setUser(session.user)
           await checkAdminStatus(session.user.id)
         } else {
-          console.log('❌ No session found - user is logged out')
+          console.log('❌ No session found')
           setUser(null)
           setIsAdmin(false)
+          localStorage.removeItem('isAdmin')
         }
       } catch (error) {
         console.error('Auth init error:', error)
@@ -54,16 +48,14 @@ export const AuthProvider = ({ children }) => {
 
     initAuth()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 Auth state changed:', event, session?.user?.email)
+      console.log('🔄 Auth state changed:', event)
       
       if (event === 'SIGNED_OUT') {
-        console.log('User signed out')
         setUser(null)
         setIsAdmin(false)
+        localStorage.removeItem('isAdmin')
       } else if (event === 'SIGNED_IN' && session?.user) {
-        console.log('User signed in')
         setUser(session.user)
         await checkAdminStatus(session.user.id)
       }
@@ -75,6 +67,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkAdminStatus = async (userId) => {
     try {
+      console.log('Checking admin for user ID:', userId)
+      
       const { data, error } = await supabase
         .from('users')
         .select('role')
@@ -88,8 +82,12 @@ export const AuthProvider = ({ children }) => {
       }
 
       const isUserAdmin = data?.role === 'admin'
-      console.log('👑 Admin status:', isUserAdmin)
+      console.log('👑 Is admin?', isUserAdmin)
       setIsAdmin(isUserAdmin)
+      
+      if (isUserAdmin) {
+        localStorage.setItem('isAdmin', 'true')
+      }
     } catch (error) {
       console.error('Admin check error:', error)
       setIsAdmin(false)
@@ -162,7 +160,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (data.user) {
-        console.log('✅ Login successful:', data.user.email)
+        console.log('✅ Login successful')
         setUser(data.user)
         await checkAdminStatus(data.user.id)
         toast.success(`Welcome back, ${cleanUsername}!`)
@@ -180,21 +178,14 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🚪 Signing out...')
       
-      // Clear state first
       setUser(null)
       setIsAdmin(false)
+      localStorage.removeItem('isAdmin')
       
-      // Clear all storage
-      localStorage.clear()
-      sessionStorage.clear()
-      
-      // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       
       toast.success('Logged out successfully')
-      
-      // Hard reload to clear any remaining state
       window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)

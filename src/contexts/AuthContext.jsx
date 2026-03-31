@@ -26,6 +26,12 @@ export const AuthProvider = ({ children }) => {
         if (session?.user) {
           setUser(session.user)
           await checkAdminStatus(session.user.id)
+        } else {
+          // Clear any stale admin flags if no session
+          localStorage.removeItem('admin_logged_in')
+          localStorage.removeItem('isAdmin')
+          setUser(null)
+          setIsAdmin(false)
         }
       } catch (error) {
         console.error('Session error:', error)
@@ -37,12 +43,17 @@ export const AuthProvider = ({ children }) => {
     initAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('Auth state changed:', _event, session?.user?.email)
+      
       if (session?.user) {
         setUser(session.user)
         await checkAdminStatus(session.user.id)
       } else {
         setUser(null)
         setIsAdmin(false)
+        // Clear admin flags on logout
+        localStorage.removeItem('admin_logged_in')
+        localStorage.removeItem('isAdmin')
       }
       setLoading(false)
     })
@@ -64,8 +75,9 @@ export const AuthProvider = ({ children }) => {
         return
       }
 
-      setIsAdmin(data?.role === 'admin')
-      console.log('Admin status:', data?.role === 'admin')
+      const isUserAdmin = data?.role === 'admin'
+      setIsAdmin(isUserAdmin)
+      console.log('Admin status for user:', userId, isUserAdmin)
     } catch (error) {
       console.error('Admin check error:', error)
       setIsAdmin(false)
@@ -74,7 +86,6 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (username, password) => {
     try {
-      // Check if username already exists
       const { data: existingUser } = await supabase
         .from('users')
         .select('username')
@@ -86,7 +97,6 @@ export const AuthProvider = ({ children }) => {
         return { error: 'Username already taken' }
       }
 
-      // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: `${username}@giaqueenie.com`,
         password: password,
@@ -98,7 +108,6 @@ export const AuthProvider = ({ children }) => {
       if (authError) throw authError
 
       if (authData.user) {
-        // Create user profile
         const { error: profileError } = await supabase
           .from('users')
           .insert([{
@@ -125,9 +134,8 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (username, password) => {
     try {
       const cleanUsername = username.trim().toLowerCase()
-      
-      // Special case for admin - check the exact email
       let email = ''
+      
       if (cleanUsername === 'corner') {
         email = 'corner@giaqueenie.com'
       } else {
@@ -148,11 +156,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (data.user) {
-        console.log('Login successful:', data.user.email)
         setUser(data.user)
         await checkAdminStatus(data.user.id)
         
-        // Check if this is the admin
         if (data.user.email === 'corner@giaqueenie.com') {
           toast.success('Welcome Admin!')
         } else {
@@ -170,12 +176,25 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      console.log('🔄 Signing out...')
+      
+      // First, sign out from Supabase
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       
+      // Clear all localStorage
+      localStorage.clear()
+      
+      // Clear sessionStorage
+      sessionStorage.clear()
+      
+      // Clear state
       setUser(null)
       setIsAdmin(false)
+      
       toast.success('Logged out successfully')
+      
+      // Force a full page reload to clear any React state
       window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)

@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
@@ -7,8 +8,9 @@ import Navbar from './components/layout/Navbar'
 import BottomNav from './components/layout/BottomNav'
 import Footer from './components/layout/Footer'
 import { supabase } from './services/supabaseClient'
+import { setupAdminUser } from './utils/setupAdmin'
 
-// Lazy load pages for better performance
+// Lazy load pages
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -19,7 +21,6 @@ const Admin = lazy(() => import('./pages/Admin'))
 const DynamicPage = lazy(() => import('./pages/DynamicPage'))
 const Cart = lazy(() => import('./pages/cart'))
 
-// Loading component
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="w-12 h-12 border-4 border-primary-gold border-t-transparent rounded-full animate-spin" />
@@ -42,15 +43,27 @@ const AdminRoute = ({ children }) => {
 
 function AppContent() {
   const [dynamicPages, setDynamicPages] = useState([])
+  const { user, loading } = useAuth()
+
+  // Run admin setup once when app loads
+  useEffect(() => {
+    const initAdmin = async () => {
+      try {
+        await setupAdminUser()
+      } catch (error) {
+        console.error('Admin setup error:', error)
+      }
+    }
+    initAdmin()
+  }, [])
 
   useEffect(() => {
     fetchDynamicPages()
     
-    // Fix: Clear any stale auth state on mount
+    // Fix auth state on mount
     const fixAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        // No session, clear any stale local data
         localStorage.removeItem('supabase.auth.token')
       }
     }
@@ -58,11 +71,20 @@ function AppContent() {
   }, [])
 
   const fetchDynamicPages = async () => {
-    const { data } = await supabase
-      .from('pages')
-      .select('slug')
-      .eq('active', true)
-    setDynamicPages(data || [])
+    try {
+      const { data } = await supabase
+        .from('pages')
+        .select('slug')
+        .eq('active', true)
+      setDynamicPages(data || [])
+    } catch (error) {
+      console.error('Error fetching pages:', error)
+    }
+  }
+
+  // Don't show anything while loading to prevent flash
+  if (loading) {
+    return <LoadingSpinner />
   }
 
   return (

@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react'
 import { supabase } from '../services/supabaseClient'
 import toast from 'react-hot-toast'
@@ -18,21 +19,31 @@ export const AuthProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
-      if (currentUser) {
-        await checkAndSetAdminStatus(currentUser.id)
+    // Check current session
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          setUser(session.user)
+          await checkAdminStatus(session.user.id)
+        }
+      } catch (error) {
+        console.error('Session check error:', error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
 
+    checkSession()
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
-      if (currentUser) {
-        await checkAndSetAdminStatus(currentUser.id)
+      if (session?.user) {
+        setUser(session.user)
+        await checkAdminStatus(session.user.id)
       } else {
+        setUser(null)
         setIsAdmin(false)
       }
       setLoading(false)
@@ -41,66 +52,46 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  const checkAndSetAdminStatus = async (userId) => {
+  const checkAdminStatus = async (userId) => {
     try {
-      let { data: userData, error } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select('role')
         .eq('id', userId)
         .single()
-      
-      if (error && error.code === 'PGRST116') {
-        const { data: authUser } = await supabase.auth.getUser()
-        const username = authUser.user?.user_metadata?.username || authUser.user?.email?.split('@')[0] || 'user'
-        
-        const { data: newUser, error: insertError } = await supabase
-          .from('users')
-          .insert([{
-            id: userId,
-            username: username,
-            email: authUser.user?.email,
-            role: username === 'corner' ? 'admin' : 'user'
-          }])
-          .select()
-          .single()
-        
-        if (!insertError && newUser) {
-          userData = newUser
-        }
+
+      if (error) {
+        console.error('Admin check error:', error)
+        setIsAdmin(false)
+        return
       }
-      
-      const isAdminUser = userData?.role === 'admin'
-      setIsAdmin(isAdminUser)
-      
-      if (isAdminUser) {
-        localStorage.setItem('isAdmin', 'true')
-      } else {
-        localStorage.removeItem('isAdmin')
-      }
-      
+
+      setIsAdmin(data?.role === 'admin')
     } catch (error) {
-      console.error('Error checking admin status:', error)
+      console.error('Admin check error:', error)
       setIsAdmin(false)
     }
   }
 
   const signUp = async (username, password) => {
     try {
-      const { data: existing } = await supabase
+      // Check if username already exists
+      const { data: existingUser } = await supabase
         .from('users')
         .select('username')
         .eq('username', username)
         .single()
-      
-      if (existing) {
-        toast.error('Username already exists')
-        return
+
+      if (existingUser) {
+        toast.error('Username already taken')
+        return { error: 'Username already taken' }
       }
 
+      // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: `${username}@giaqueenie.com`,
         password: password,
-        options: { 
+        options: {
           data: { username }
         }
       })
@@ -108,82 +99,109 @@ export const AuthProvider = ({ children }) => {
       if (authError) throw authError
 
       if (authData.user) {
-        const { error: insertError } = await supabase.from('users').insert([{
-          id: authData.user.id,
-          username: username,
-          email: `${username}@giaqueenie.com`,
-          role: 'user'
-        }])
-        
-        if (insertError) throw insertError
-        
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: `${username}@giaqueenie.com`,
-          password: password
-        })
-        
-        if (signInError) throw signInError
+        // Create user profile
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert([{
+            id: authData.user.id,
+            username: username,
+            email: `${username}@giaqueenie.com`,
+            role: 'user'
+          }])
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError)
+          // Don't throw - user might still be able to login
+        }
+
         toast.success(`Welcome to GiaQueenie, ${username}!`)
-        return authData
+        return { data: authData }
       }
     } catch (error) {
+      console.error('Signup error:', error)
       toast.error(error.message || 'Registration failed')
-      throw error
+      return { error }
     }
   }
 
   const signIn = async (username, password) => {
     try {
-      // Trim and clean the username
-      const cleanUsername = username?.trim().toLowerCase()
-      const cleanPassword = password?.trim()
+      const cleanUsername = username.trim().toLowerCase()
+      const email = `${cleanUsername}@giaqueenie.com`
       
-      console.log('🔐 Attempting login for:', cleanUsername)
-      console.log('Admin check:', cleanUsername === 'corner', cleanPassword === 'cornerdooadmin4life')
+      console.log('Attempting login for:', email)
       
-      // SPECIAL ADMIN LOGIN - Check with cleaned values
-      if (cleanUsername === 'corner' && cleanPassword === 'cornerdooadmin4life') {
-        console.log('👑 ADMIN LOGIN DETECTED - Using direct bypass')
-        
-        // DIRECT BYPASS - Create a fake session for admin
-        const adminUser = {
-          id: 'admin-' + Date.now(),
-          email: 'corner@giaqueenie.com',
-          user_metadata: { username: 'corner' }
-        }
-        
-        // Store admin session in localStorage
-        localStorage.setItem('isAdmin', 'true')
-        localStorage.setItem('admin_logged_in', 'true')
-        
-        // Create a fake user object
-        const fakeSession = {
-          user: adminUser,
-          access_token: 'fake-token-' + Date.now()
-        }
-        
-        setUser(adminUser)
-        setIsAdmin(true)
-        
-        console.log('✅ Admin login successful (bypass)')
-        toast.success('Welcome Admin!')
-        return { data: { session: fakeSession, user: adminUser } }
-      }
-      
-      // REGULAR USER LOGIN
-      console.log('👤 Regular user login')
+      // Attempt sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${cleanUsername}@giaqueenie.com`,
-        password: cleanPassword
+        email: email,
+        password: password
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('Auth error:', error)
+        
+        // If user doesn't exist in auth, try to create them
+        if (error.message.includes('Invalid login credentials')) {
+          // Check if this is a valid user in our users table
+          const { data: userData } = await supabase
+            .from('users')
+            .select('username, email')
+            .eq('username', cleanUsername)
+            .single()
+          
+          if (userData) {
+            // User exists in users table but not in auth - create auth account
+            const tempPassword = password || 'temporary123'
+            const { data: newAuth, error: createError } = await supabase.auth.signUp({
+              email: userData.email || email,
+              password: tempPassword,
+              options: {
+                data: { username: cleanUsername }
+              }
+            })
+            
+            if (createError) {
+              console.error('Auth creation error:', createError)
+              toast.error('Account exists but needs setup. Please contact support.')
+              throw createError
+            }
+            
+            if (newAuth.user) {
+              // Update user id to match auth
+              await supabase
+                .from('users')
+                .update({ id: newAuth.user.id })
+                .eq('username', cleanUsername)
+              
+              // Try login again
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                email: userData.email || email,
+                password: tempPassword
+              })
+              
+              if (!retryError && retryData.user) {
+                setUser(retryData.user)
+                await checkAdminStatus(retryData.user.id)
+                toast.success(`Welcome back, ${cleanUsername}!`)
+                return retryData
+              }
+            }
+          }
+        }
+        
+        toast.error('Invalid username or password')
+        throw error
+      }
+
+      if (data.user) {
+        setUser(data.user)
+        await checkAdminStatus(data.user.id)
+        toast.success(`Welcome back, ${cleanUsername}!`)
+      }
       
-      console.log('✅ User login successful')
-      toast.success(`Welcome back, ${cleanUsername}!`)
       return data
     } catch (error) {
-      console.error('❌ Login error:', error)
+      console.error('Login error:', error)
       toast.error('Invalid username or password')
       throw error
     }
@@ -191,15 +209,14 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      // Clear all admin bypass data
-      localStorage.removeItem('isAdmin')
-      localStorage.removeItem('admin_logged_in')
-      
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+      
       setUser(null)
       setIsAdmin(false)
       toast.success('Logged out successfully')
+      
+      // Redirect to home
       window.location.href = '/'
     } catch (error) {
       console.error('Logout error:', error)
@@ -207,8 +224,17 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const value = {
+    user,
+    loading,
+    isAdmin,
+    signUp,
+    signIn,
+    signOut
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

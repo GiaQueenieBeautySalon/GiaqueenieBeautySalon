@@ -8,7 +8,8 @@ const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-
+  const isAdminBypass = localStorage.getItem('admin_logged_in') === 'true'
+  const showAdmin = isAdmin || isAdminBypass
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/shop', label: 'Shop' },

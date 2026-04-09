@@ -67,51 +67,54 @@ const Admin = () => {
     monthlyRevenue: 0
   })
 
-  // ============================================
-  // REAL-TIME UPDATES - ADD THIS ENTIRE BLOCK
+    // ============================================
+  // REAL-TIME UPDATES - SAFE VERSION
   // ============================================
   
   useRealtime('products', () => {
-    console.log('🔄 Products changed, refreshing...')
+    console.log('🔄 Products changed')
     if (activeTab === 'products' || activeTab === 'analytics') {
-      fetchData()
+      setTimeout(() => fetchData(), 100)
     }
   })
 
   useRealtime('services', () => {
-    console.log('🔄 Services changed, refreshing...')
+    console.log('🔄 Services changed')
     if (activeTab === 'services' || activeTab === 'analytics') {
-      fetchData()
+      setTimeout(() => fetchData(), 100)
     }
   })
 
   useRealtime('orders', () => {
-    console.log('🔄 Orders changed, refreshing...')
+    console.log('🔄 Orders changed')
     if (activeTab === 'orders' || activeTab === 'analytics') {
-      fetchData()
+      setTimeout(() => fetchData(), 100)
     }
   })
 
-  useRealtime('users', () => {
-    console.log('🔄 Users changed, refreshing...')
-    if (activeTab === 'users' || activeTab === 'analytics') {
-      fetchData()
-    }
-  })
+  // Comment these out temporarily if still having issues
+  // useRealtime('users', () => {
+  //   console.log('🔄 Users changed')
+  //   if (activeTab === 'users' || activeTab === 'analytics') {
+  //     setTimeout(() => fetchData(), 100)
+  //   }
+  // })
 
-  useRealtime('pages', () => {
-    console.log('🔄 Pages changed, refreshing...')
-    if (activeTab === 'pages') {
-      fetchData()
-    }
-  })
+  // useRealtime('pages', () => {
+  //   console.log('🔄 Pages changed')
+  //   if (activeTab === 'pages') {
+  //     setTimeout(() => fetchData(), 100)
+  //   }
+  // })
 
-  useRealtime('hero_media', () => {
-    console.log('🔄 Hero media changed, refreshing...')
-    if (activeTab === 'media') {
-      fetchData()
-    }
-  })
+  // useRealtime('hero_media', () => {
+  //   console.log('🔄 Hero media changed')
+  //   if (activeTab === 'media') {
+  //     setTimeout(() => fetchData(), 100)
+  //   }
+  // })
+
+  // ============================================
 
   const menuItems = [
     { id: 'analytics', label: 'Analytics', icon: IoAnalyticsOutline, description: 'View store performance' },

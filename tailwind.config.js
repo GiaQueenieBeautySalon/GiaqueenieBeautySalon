@@ -7,14 +7,12 @@ export default {
   theme: {
     extend: {
       screens: {
-        // Custom breakpoints for better mobile/tablet control
-        'xs': '375px',    // Small phones (iPhone SE)
-        'sm': '480px',    // Large phones
-        'md': '768px',    // Tablets
-        'lg': '1024px',   // Small laptops/landscape tablets
+        'xs': '360px',    // Small Android phones
+        'sm': '480px',    // Large phones (Samsung S21 Ultra portrait)
+        'md': '768px',    // Tablets portrait
+        'lg': '1024px',   // Tablets landscape / small laptops
         'xl': '1280px',   // Desktops
         '2xl': '1536px',  // Large desktops
-        '3xl': '1920px',  // Extra large screens
       },
       colors: {
         primary: {
@@ -33,22 +31,25 @@ export default {
         body: ['Inter', 'sans-serif'],
       },
       fontSize: {
-        // Responsive font sizes
-        'xs-mobile': ['0.7rem', { lineHeight: '1rem' }],
-        'sm-mobile': ['0.8rem', { lineHeight: '1.25rem' }],
-        'base-mobile': ['0.9rem', { lineHeight: '1.5rem' }],
-        'lg-mobile': ['1.1rem', { lineHeight: '1.75rem' }],
-        'xl-mobile': ['1.25rem', { lineHeight: '1.75rem' }],
-        '2xl-mobile': ['1.5rem', { lineHeight: '2rem' }],
-        '3xl-mobile': ['1.875rem', { lineHeight: '2.25rem' }],
-        '4xl-mobile': ['2.25rem', { lineHeight: '2.5rem' }],
+        'xxs': ['0.625rem', { lineHeight: '0.875rem' }],
+        'xs': ['0.75rem', { lineHeight: '1rem' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'base': ['1rem', { lineHeight: '1.5rem' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+        '5xl': ['3rem', { lineHeight: '1.2' }],
+        '6xl': ['3.75rem', { lineHeight: '1.2' }],
       },
       spacing: {
-        // Safe area insets for notched phones
         'safe-top': 'env(safe-area-inset-top)',
         'safe-bottom': 'env(safe-area-inset-bottom)',
         'safe-left': 'env(safe-area-inset-left)',
         'safe-right': 'env(safe-area-inset-right)',
+        '18': '4.5rem',
+        '22': '5.5rem',
       },
       backdropBlur: {
         xs: '2px',

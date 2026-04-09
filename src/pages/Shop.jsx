@@ -5,6 +5,7 @@ import ProductCard from '../components/ui/ProductCard'
 import GlassCard from '../components/ui/GlassCard'
 import { IoSearch } from 'react-icons/io5'
 import toast from 'react-hot-toast'
+import { useRealtime } from '../hooks/useRealtime'  // <-- ADD THIS LINE
 
 const Shop = () => {
   const [products, setProducts] = useState([])
@@ -29,6 +30,15 @@ const Shop = () => {
     { value: 'price-asc', label: 'Price: Low to High' },
     { value: 'price-desc', label: 'Price: High to Low' }
   ]
+
+  // ============================================
+  // REAL-TIME UPDATES - ADD THIS
+  // ============================================
+  useRealtime('products', () => {
+    console.log('🛍️ Products updated, refreshing shop...')
+    fetchProducts()
+  })
+  // ============================================
 
   useEffect(() => {
     fetchProducts()

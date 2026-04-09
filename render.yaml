@@ -1,0 +1,18 @@
+# render.yaml
+services:
+  - type: web
+    name: giaqueenie-beauty-salon
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_SUPABASE_URL
+        value: https://oalccaxnnmetckuwaxbl.supabase.co
+      - key: VITE_SUPABASE_ANON_KEY
+        value: sb_publishable_WHQS8B3aL7hNT33bfS-z9w_J_k6PqFp
+      - key: VITE_CLOUDINARY_CLOUD_NAME
+        value: dncv9mquq

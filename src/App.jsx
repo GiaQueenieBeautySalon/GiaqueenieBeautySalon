@@ -9,6 +9,7 @@ import BottomNav from './components/layout/BottomNav'
 import Footer from './components/layout/Footer'
 import { supabase } from './services/supabaseClient'
 import { setupAdminUser } from './utils/setupAdmin'
+import { useRealtime } from './hooks/useRealtime'
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'))
@@ -44,25 +45,60 @@ const AdminRoute = ({ children }) => {
 function AppContent() {
   const [dynamicPages, setDynamicPages] = useState([])
   const { user, loading } = useAuth()
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  // src/App.jsx - Update the useEffect that calls setupAdmin
-useEffect(() => {
-  // Run admin setup once but DO NOT auto-login
-  const initAdmin = async () => {
-    try {
-      // Just check/create admin, don't login automatically
-      await setupAdminUser()
-    } catch (error) {
-      console.error('Admin setup error:', error)
+  // REAL-TIME SUBSCRIPTION FOR PAGES
+  useRealtime('pages', () => {
+    console.log('📄 Pages updated, refreshing...')
+    fetchDynamicPages()
+  }, [])
+
+  // REAL-TIME SUBSCRIPTION FOR PRODUCTS
+  useRealtime('products', (payload) => {
+    console.log('🛍️ Products updated:', payload.eventType)
+    // Force re-render of shop page
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
+  // REAL-TIME SUBSCRIPTION FOR SERVICES
+  useRealtime('services', (payload) => {
+    console.log('💇 Services updated:', payload.eventType)
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
+  // REAL-TIME SUBSCRIPTION FOR ORDERS
+  useRealtime('orders', (payload) => {
+    console.log('📦 Orders updated:', payload.eventType)
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
+  // REAL-TIME SUBSCRIPTION FOR USERS
+  useRealtime('users', (payload) => {
+    console.log('👤 Users updated:', payload.eventType)
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
+  // REAL-TIME SUBSCRIPTION FOR HERO MEDIA
+  useRealtime('hero_media', () => {
+    console.log('🎬 Hero media updated')
+    setRefreshKey(prev => prev + 1)
+  }, [])
+
+  useEffect(() => {
+    // Run admin setup once
+    const initAdmin = async () => {
+      try {
+        await setupAdminUser()
+      } catch (error) {
+        console.error('Admin setup error:', error)
+      }
     }
-  }
-  initAdmin()
-}, [])
+    initAdmin()
+  }, [])
 
   useEffect(() => {
     fetchDynamicPages()
     
-    // Fix auth state on mount
     const fixAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
@@ -84,7 +120,6 @@ useEffect(() => {
     }
   }
 
-  // Don't show anything while loading to prevent flash
   if (loading) {
     return <LoadingSpinner />
   }
@@ -95,7 +130,7 @@ useEffect(() => {
         <Navbar />
         <main className="flex-grow pt-16">
           <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
+            <Routes key={refreshKey}>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

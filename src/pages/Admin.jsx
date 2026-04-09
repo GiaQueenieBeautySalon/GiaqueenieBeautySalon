@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../services/supabaseClient'
 import { uploadToCloudinary, uploadMultipleToCloudinary, uploadVideoToCloudinary } from '../services/cloudinary'
 import toast from 'react-hot-toast'
+import { useRealtime } from '../hooks/useRealtime'
 import { 
   IoAnalyticsOutline, 
   IoPeopleOutline, 
@@ -64,6 +65,52 @@ const Admin = () => {
     pendingOrders: 0,
     completedOrders: 0,
     monthlyRevenue: 0
+  })
+
+  // ============================================
+  // REAL-TIME UPDATES - ADD THIS ENTIRE BLOCK
+  // ============================================
+  
+  useRealtime('products', () => {
+    console.log('🔄 Products changed, refreshing...')
+    if (activeTab === 'products' || activeTab === 'analytics') {
+      fetchData()
+    }
+  })
+
+  useRealtime('services', () => {
+    console.log('🔄 Services changed, refreshing...')
+    if (activeTab === 'services' || activeTab === 'analytics') {
+      fetchData()
+    }
+  })
+
+  useRealtime('orders', () => {
+    console.log('🔄 Orders changed, refreshing...')
+    if (activeTab === 'orders' || activeTab === 'analytics') {
+      fetchData()
+    }
+  })
+
+  useRealtime('users', () => {
+    console.log('🔄 Users changed, refreshing...')
+    if (activeTab === 'users' || activeTab === 'analytics') {
+      fetchData()
+    }
+  })
+
+  useRealtime('pages', () => {
+    console.log('🔄 Pages changed, refreshing...')
+    if (activeTab === 'pages') {
+      fetchData()
+    }
+  })
+
+  useRealtime('hero_media', () => {
+    console.log('🔄 Hero media changed, refreshing...')
+    if (activeTab === 'media') {
+      fetchData()
+    }
   })
 
   const menuItems = [

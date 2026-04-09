@@ -5,12 +5,22 @@ import ServiceCard from '../components/ui/ServiceCard'
 import GlassCard from '../components/ui/GlassCard'
 import { IoSearch } from 'react-icons/io5'
 import toast from 'react-hot-toast'
+import { useRealtime } from '../hooks/useRealtime'  // <-- ADD THIS LINE
 
 const Services = () => {
   const [services, setServices] = useState([])
   const [filteredServices, setFilteredServices] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+
+  // ============================================
+  // REAL-TIME UPDATES - ADD THIS
+  // ============================================
+  useRealtime('services', () => {
+    console.log('💇 Services updated, refreshing...')
+    fetchServices()
+  })
+  // ============================================
 
   useEffect(() => {
     fetchServices()

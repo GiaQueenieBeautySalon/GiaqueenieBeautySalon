@@ -1,26 +1,28 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import { IoMenu, IoClose, IoPerson, IoLogOut } from 'react-icons/io5'
+import { IoMenu, IoClose } from 'react-icons/io5'
 
 const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth()
-  const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const isAdminBypass = localStorage.getItem('admin_logged_in') === 'true'
-  const showAdmin = isAdmin || isAdminBypass
+  
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/shop', label: 'Shop' },
     { path: '/services', label: 'Services' },
   ]
 
+  const handleLogout = async () => {
+    setIsMenuOpen(false)
+    await signOut()
+  }
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card rounded-none border-t-0 border-x-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link to="/" className="text-2xl font-display gold-text">
             GiaQueenie
           </Link>
@@ -54,7 +56,7 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 <button
-                  onClick={signOut}
+                  onClick={handleLogout}
                   className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30"
                 >
                   Logout
@@ -128,10 +130,7 @@ const Navbar = () => {
                     Dashboard
                   </Link>
                   <button
-                    onClick={() => {
-                      signOut()
-                      setIsMenuOpen(false)
-                    }}
+                    onClick={handleLogout}
                     className="block text-red-400 w-full text-left py-2"
                   >
                     Logout

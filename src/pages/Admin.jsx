@@ -23,11 +23,13 @@ import {
   IoMenuOutline,
   IoRefreshOutline,
   IoSearchOutline,
-  IoStatsChartOutline
+  IoStatsChartOutline,
+  IoChevronBackOutline
 } from 'react-icons/io5'
 
 const Admin = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)  // <-- CHANGE false to true
+  const [isMobile, setIsMobile] = useState(false)       // <-- ADD THIS LINE
   const [activeTab, setActiveTab] = useState('analytics')
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -83,8 +85,26 @@ const Admin = () => {
   const categories = ['Hair Care', 'Hair Tools', 'Aromatherapy', 'Wedding Packages', 'Bags', 'Gift Cards']
 
   useEffect(() => {
-    fetchData()
-  }, [activeTab])
+  fetchData()
+}, [activeTab])
+
+// ADD THIS NEW USEEFFECT HERE
+useEffect(() => {
+  const checkMobile = () => {
+    const mobile = window.innerWidth < 768
+    setIsMobile(mobile)
+    setSidebarOpen(!mobile)
+  }
+  
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  return () => window.removeEventListener('resize', checkMobile)
+}, [])
+
+// Add this right after the new useEffect
+const toggleSidebar = () => {
+  setSidebarOpen(!sidebarOpen)
+}
 
   const fetchData = async () => {
     setLoading(true)
@@ -3400,16 +3420,9 @@ const handleSaveSocialLinks = async () => {
 
   return (
     <div className="dashboard-layout">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="md:hidden fixed top-20 left-4 z-50 p-2 glass-card rounded-xl"
-      >
-        <IoMenuOutline size={22} />
-      </button>
 
       {/* Sidebar */}
-      <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="p-5 border-b border-white/10">
           <img src="/logo.svg" alt="GiaQueenie" className="h-7 mb-2" />
           <h2 className="text-xl font-display gold-text">Admin Panel</h2>
@@ -3420,7 +3433,12 @@ const handleSaveSocialLinks = async () => {
           {menuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id); setSidebarOpen(false); setSearchTerm(''); setFilterStatus('all'); }}
+              onClick={() => { 
+  setActiveTab(item.id); 
+  if (isMobile) setSidebarOpen(false);  // <-- Only close on mobile
+  setSearchTerm(''); 
+  setFilterStatus('all');
+}}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                 activeTab === item.id 
                   ? 'bg-primary-gold/20 text-primary-gold border border-primary-gold/30' 
@@ -3445,12 +3463,22 @@ const handleSaveSocialLinks = async () => {
       </aside>
 
       {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/70 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+      {sidebarOpen && isMobile && (
+  <div className="dashboard-overlay visible" onClick={() => setSidebarOpen(false)} />
+)}
+
+      {/* Hamburger Menu Button */}
+<button 
+  className="dashboard-menu-btn"
+  onClick={toggleSidebar}
+  aria-label="Toggle sidebar"
+>
+  {sidebarOpen ? <IoChevronBackOutline size={22} /> : <IoMenuOutline size={22} />}
+</button>
+
 
       {/* Main Content */}
-      <main className="dashboard-main">
+      <main className={`dashboard-main ${!sidebarOpen ? 'full-width' : ''}`}>
         <div className="dashboard-content">
           {/* Header */}
           <div className="mb-6">

@@ -25,15 +25,17 @@ import {
   IoRefreshOutline,
   IoStarOutline,
   IoTrendingUpOutline,
-  IoGiftOutline
+  IoGiftOutline,
+  IoChevronBackOutline
 } from 'react-icons/io5'
 
 const Dashboard = () => {
   const { user, signOut } = useAuth()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true) // Default open on desktop
   const [activeSection, setActiveSection] = useState('overview')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -62,6 +64,20 @@ const Dashboard = () => {
     { id: 'profile', label: 'Profile', icon: IoPersonOutline },
     { id: 'settings', label: 'Settings', icon: IoSettingsOutline }
   ]
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      // On mobile, default to closed; on desktop, default to open
+      setSidebarOpen(!mobile)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (user) {
@@ -110,18 +126,18 @@ const Dashboard = () => {
     
     if (orders) {
       const totalSpent = orders.reduce((sum, order) => sum + order.total, 0)
-      const pendingOrders = orders.filter(o => o.status === 'pending').length
-      const completedOrders = orders.filter(o => o.status === 'completed').length
+      const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'pending_confirmation').length
+      const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'delivered').length
       const averageOrderValue = orders.length > 0 ? totalSpent / orders.length : 0
       
-      setStats({
+      setStats(prev => ({
+        ...prev,
         totalOrders: orders.length,
         totalSpent: totalSpent,
-        totalFavorites: stats.totalFavorites,
         pendingOrders: pendingOrders,
         completedOrders: completedOrders,
         averageOrderValue: averageOrderValue
-      })
+      }))
       
       setAllOrders(orders)
       setRecentOrders(orders.slice(0, 5))
@@ -187,14 +203,32 @@ const Dashboard = () => {
   const getStatusConfig = (status) => {
     switch(status) {
       case 'completed':
+      case 'delivered':
         return { color: 'text-green-400', bg: 'bg-green-500/10', icon: IoCheckmarkCircleOutline, label: 'Completed' }
       case 'pending':
         return { color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: IoHourglassOutline, label: 'Pending' }
+      case 'pending_confirmation':
+        return { color: 'text-orange-400', bg: 'bg-orange-500/10', icon: IoHourglassOutline, label: 'Awaiting Confirmation' }
       case 'processing':
         return { color: 'text-blue-400', bg: 'bg-blue-500/10', icon: IoRefreshOutline, label: 'Processing' }
+      case 'shipped':
+        return { color: 'text-purple-400', bg: 'bg-purple-500/10', icon: IoRefreshOutline, label: 'Shipped' }
       default:
         return { color: 'text-white/40', bg: 'bg-white/5', icon: IoTimeOutline, label: status }
     }
+  }
+
+  // Handle menu item click - close sidebar on mobile
+  const handleMenuClick = (sectionId) => {
+    setActiveSection(sectionId)
+    if (isMobile) {
+      setSidebarOpen(false)
+    }
+  }
+
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
   }
 
   const OverviewSection = () => (
@@ -249,7 +283,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-display gold-text">Recent Orders</h3>
-            <button onClick={() => setActiveSection('orders')} className="text-primary-gold hover:text-primary-rose text-sm flex items-center gap-1">
+            <button onClick={() => handleMenuClick('orders')} className="text-primary-gold hover:text-primary-rose text-sm flex items-center gap-1">
               View All <IoChevronForward size={14} />
             </button>
           </div>
@@ -527,16 +561,14 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-layout min-h-screen">
-      {/* Mobile Menu Button - adjust position */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="md:hidden fixed top-20 left-4 z-50 p-2 glass-card rounded-xl"
-      >
-        <IoMenuOutline size={22} />
-      </button>
+      {/* Overlay for mobile */}
+      <div 
+        className={`dashboard-overlay ${sidebarOpen && isMobile ? 'visible' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
-      {/* Sidebar - add pt-16 to account for navbar */}
-      <aside className={`dashboard-sidebar pt-16 ${sidebarOpen ? 'open' : ''}`}>
+      {/* Sidebar */}
+      <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'} pt-16`}>
         <div className="p-5 border-b border-white/10">
           <img src="/logo.svg" alt="GiaQueenie" className="h-7 mb-2" />
           <h2 className="text-xl font-display gold-text">Dashboard</h2>
@@ -547,7 +579,7 @@ const Dashboard = () => {
           {menuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveSection(item.id); setSidebarOpen(false) }}
+              onClick={() => handleMenuClick(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                 activeSection === item.id 
                   ? 'bg-primary-gold/20 text-primary-gold border border-primary-gold/30' 
@@ -568,13 +600,17 @@ const Dashboard = () => {
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/70 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+      {/* Hamburger Menu Button */}
+      <button 
+        className="dashboard-menu-btn"
+        onClick={toggleSidebar}
+        aria-label="Toggle sidebar"
+      >
+        {sidebarOpen ? <IoChevronBackOutline size={22} /> : <IoMenuOutline size={22} />}
+      </button>
 
-      {/* Main Content - add pt-16 to account for navbar */}
-      <main className="dashboard-main pt-16">
+      {/* Main Content */}
+      <main className={`dashboard-main ${!sidebarOpen ? 'full-width' : ''} pt-16`}>
         <div className="dashboard-content">
           {renderContent()}
         </div>

@@ -530,3 +530,165 @@ img, video, iframe {
     padding-right: env(safe-area-inset-right);
   }
 }
+
+/* ============================================
+   DASHBOARD LAYOUT - COLLAPSIBLE SIDEBAR
+   ============================================ */
+
+.dashboard-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.dashboard-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 260px;
+  background: #111111;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-y: auto;
+  z-index: 50;
+  transition: transform 0.3s ease;
+  padding-top: 70px;
+}
+
+/* Sidebar closed state - hidden on all devices */
+.dashboard-sidebar.closed {
+  transform: translateX(-100%);
+}
+
+/* Sidebar open state */
+.dashboard-sidebar.open {
+  transform: translateX(0);
+}
+
+@media (max-width: 767px) {
+  .dashboard-sidebar {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-sidebar {
+    width: 240px;
+  }
+}
+
+/* Main content area - expands when sidebar is closed */
+.dashboard-main {
+  flex: 1;
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  padding: 80px 16px 40px;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+/* When sidebar is closed, main content takes full width */
+.dashboard-sidebar.closed ~ .dashboard-main,
+.dashboard-main.full-width {
+  margin-left: 0;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .dashboard-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 70px 16px 80px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-main {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    padding: 80px 20px 40px;
+  }
+  
+  .dashboard-sidebar.closed ~ .dashboard-main {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+.dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Hamburger menu button - always visible */
+.dashboard-menu-btn {
+  position: fixed;
+  top: 80px;
+  left: 16px;
+  z-index: 60;
+  padding: 12px;
+  background: rgba(17, 17, 17, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #D4AF37;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.dashboard-menu-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #D4AF37;
+}
+
+/* When sidebar is open on desktop, move button with sidebar */
+@media (min-width: 768px) {
+  .dashboard-menu-btn {
+    transition: left 0.3s ease;
+  }
+  
+  .dashboard-sidebar.open ~ .dashboard-menu-btn {
+    left: 276px;
+  }
+  
+  .dashboard-sidebar.closed ~ .dashboard-menu-btn {
+    left: 16px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-sidebar.open ~ .dashboard-menu-btn {
+    left: 256px;
+  }
+}
+
+/* Overlay for mobile when sidebar is open */
+.dashboard-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 45;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.dashboard-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (min-width: 768px) {
+  .dashboard-overlay {
+    display: none;
+  }
+}
+

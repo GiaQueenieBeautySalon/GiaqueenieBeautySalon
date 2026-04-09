@@ -4,46 +4,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Prevent caching issues */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Fix input focus issues */
-input, textarea, select {
-  font-size: 16px !important;
-}
-
 /* ============================================
-   GLOBAL RESET & FIXES
+   CRITICAL GLOBAL RESET FOR ALL DEVICES
    ============================================ */
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html {
   width: 100%;
-  max-width: 100%;
+  max-width: 100vw;
   overflow-x: hidden !important;
-  position: relative;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-dark text-white font-body antialiased;
-  background: linear-gradient(135deg, #050505 0%, #0A0A0A 50%, #111111 100%);
+  width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
   overflow-x: hidden !important;
+  position: relative;
+  @apply bg-dark text-white font-body antialiased;
+  background: linear-gradient(135deg, #050505 0%, #0A0A0A 50%, #111111 100%);
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior-y: none;
 }
 
 #root {
   width: 100%;
-  max-width: 100%;
+  max-width: 100vw;
+  min-height: 100vh;
   overflow-x: hidden !important;
   position: relative;
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fix input zoom on iOS */
+input, textarea, select, button {
+  font-size: 16px !important;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Prevent zoom on focus for iOS */
+@media screen and (max-width: 768px) {
+  input:focus, textarea:focus, select:focus {
+    font-size: 16px !important;
+  }
+}
+
+/* ============================================
+   SAFE AREA SUPPORT FOR NOTCHED DEVICES
+   ============================================ */
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-padding-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-padding-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-padding-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-padding-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }
 
 /* ============================================
@@ -51,8 +96,15 @@ body {
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
+}
+
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 }
 
 ::-webkit-scrollbar-track {
@@ -61,10 +113,6 @@ body {
 
 ::-webkit-scrollbar-thumb {
   @apply bg-primary-gold rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #E0BFB8;
 }
 
 /* ============================================
@@ -78,20 +126,21 @@ body {
   }
 
   .glass-card-hover {
-    @apply glass-card transition-all duration-500 hover:bg-white/10 hover:border-primary-gold/50 hover:shadow-2xl hover:-translate-y-1;
+    @apply glass-card transition-all duration-500 hover:bg-white/10 hover:border-primary-gold/50 hover:shadow-2xl md:hover:-translate-y-1;
   }
 
   .btn-primary {
-    @apply px-6 py-2.5 rounded-full font-semibold transition-all duration-300 
+    @apply px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-semibold transition-all duration-300 
            bg-primary-gold text-black hover:bg-primary-rose hover:shadow-lg 
-           hover:shadow-primary-gold/50 transform hover:scale-105 active:scale-95;
+           hover:shadow-primary-gold/50 transform active:scale-95
+           text-sm sm:text-base;
   }
 
   .btn-secondary {
-    @apply px-6 py-2.5 rounded-full font-semibold transition-all duration-300 
+    @apply px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-semibold transition-all duration-300 
            border-2 border-primary-gold text-primary-gold 
            hover:bg-primary-gold/20 hover:border-primary-rose hover:text-primary-rose
-           transform hover:scale-105 active:scale-95;
+           transform active:scale-95 text-sm sm:text-base;
   }
 
   .gold-text {
@@ -107,18 +156,17 @@ body {
   }
 
   .input-luxury {
-    @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl 
+    @apply w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl 
            text-white placeholder-white/40 focus:outline-none focus:border-primary-gold 
-           transition-all duration-300;
+           transition-all duration-300 text-sm sm:text-base;
   }
 }
 
 /* ============================================
-   LAYOUT FIXES - CRITICAL
+   RESPONSIVE CONTAINERS
    ============================================ */
 
-/* Main container fixes */
-.container-center {
+.container-responsive {
   width: 100%;
   max-width: 1280px;
   margin-left: auto;
@@ -127,44 +175,104 @@ body {
   padding-right: 1rem;
 }
 
-/* Fix for all pages with padding */
-.page-container {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  padding-top: 5rem;
-  padding-bottom: 6rem;
+@media (min-width: 480px) {
+  .container-responsive {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
 }
 
-/* Desktop padding adjustment */
 @media (min-width: 768px) {
-  .page-container {
+  .container-responsive {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
 }
 
-/* Mobile padding */
-@media (max-width: 767px) {
-  .page-container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 
 /* ============================================
-   DASHBOARD SPECIFIC FIXES
+   PAGE LAYOUTS
    ============================================ */
 
-/* Dashboard layout - ensure navbar doesn't overlap */
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-top: 4rem;
+  padding-bottom: 5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 480px) {
+  .page-container {
+    padding-top: 4.5rem;
+    padding-bottom: 5rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .page-container {
+    padding-top: 5rem;
+    padding-bottom: 2rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ============================================
+   NAVBAR RESPONSIVE FIXES
+   ============================================ */
+
+nav {
+  width: 100%;
+  max-width: 100vw;
+}
+
+.nav-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 480px) {
+  .nav-container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .nav-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ============================================
+   DASHBOARD RESPONSIVE LAYOUT
+   ============================================ */
+
 .dashboard-layout {
   display: flex;
   width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
   position: relative;
+  overflow-x: hidden;
 }
 
-/* Dashboard sidebar - account for navbar height */
 .dashboard-sidebar {
   position: fixed;
   left: 0;
@@ -174,31 +282,63 @@ body {
   background: #111111;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   overflow-y: auto;
-  z-index: 40;
+  z-index: 50;
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
+  padding-top: env(safe-area-inset-top);
 }
 
-/* Ensure sidebar content starts below navbar */
-.dashboard-sidebar > *:first-child {
-  margin-top: 0;
+@media (max-width: 767px) {
+  .dashboard-sidebar {
+    transform: translateX(-100%);
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+  }
 }
 
-/* Dashboard main content - account for navbar height */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-sidebar {
+    width: 220px;
+  }
+}
+
 .dashboard-main {
   flex: 1;
   margin-left: 260px;
   width: calc(100% - 260px);
   min-height: 100vh;
-  padding: 1.5rem;
-  padding-top: 5rem; /* Account for fixed navbar (h-16 = 4rem, plus extra space) */
+  padding: 1rem;
+  padding-top: 5rem;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* Dashboard content container */
+@media (max-width: 767px) {
+  .dashboard-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 0.75rem;
+    padding-top: 4.5rem;
+    padding-bottom: 5rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-main {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+    padding: 1.25rem;
+    padding-top: 5rem;
+  }
+}
+
 .dashboard-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -206,144 +346,343 @@ body {
   flex: 1;
 }
 
-/* Welcome banner - ensure it's fully visible */
-.dashboard-content .glass-card:first-child {
-  margin-top: 0;
-}
-
-/* Mobile dashboard adjustments */
-@media (max-width: 768px) {
-  .dashboard-sidebar {
-    transform: translateX(-100%);
-    padding-top: 4rem;
-  }
-  
-  .dashboard-sidebar.open {
-    transform: translateX(0);
-  }
-  
-  .dashboard-main {
-    margin-left: 0;
-    width: 100%;
-    padding: 1rem;
-    padding-top: 5rem; /* Keep padding for mobile navbar */
-  }
-}
-
-/* Desktop adjustments */
-@media (min-width: 769px) {
-  .dashboard-main {
-    padding-top: 5rem; /* Consistent padding on desktop */
-  }
-}
-
-/* Ensure stats cards and content are fully visible */
-.dashboard-content > * {
-  margin-bottom: 1.5rem;
-}
-
-.dashboard-content > *:last-child {
-  margin-bottom: 0;
-}
-
-
 /* ============================================
-   RESPONSIVE UTILITIES
+   CART RESPONSIVE
    ============================================ */
 
-/* Responsive containers */
-@media (min-width: 640px) {
-  .container-sm { max-width: 640px; margin: 0 auto; }
+.cart-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
 }
+
+@media (min-width: 480px) {
+  .cart-item {
+    flex-direction: row;
+    align-items: center;
+    padding: 1rem;
+  }
+}
+
+/* ============================================
+   PRODUCT GRID RESPONSIVE
+   ============================================ */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 480px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
 @media (min-width: 768px) {
-  .container-md { max-width: 768px; margin: 0 auto; }
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
 }
+
 @media (min-width: 1024px) {
-  .container-lg { max-width: 1024px; margin: 0 auto; }
-}
-@media (min-width: 1280px) {
-  .container-xl { max-width: 1280px; margin: 0 auto; }
-}
-
-/* Prevent any horizontal scroll */
-.overflow-x-hidden {
-  overflow-x: hidden !important;
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
 }
 
-/* Ensure all content respects boundaries */
+/* ============================================
+   SERVICES GRID RESPONSIVE
+   ============================================ */
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .services-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* ============================================
+   TYPOGRAPHY RESPONSIVE
+   ============================================ */
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.75rem;
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+h4 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.1rem; }
+}
+
+@media (min-width: 768px) {
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.75rem; }
+  h4 { font-size: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+  h1 { font-size: 3rem; }
+  h2 { font-size: 2.25rem; }
+  h3 { font-size: 1.875rem; }
+}
+
+/* ============================================
+   HERO SECTION RESPONSIVE
+   ============================================ */
+
+.hero-section {
+  position: relative;
+  height: 100vh;
+  min-height: 500px;
+  width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    min-height: 100vh;
+    height: 100vh;
+  }
+}
+
+.hero-content {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+}
+
+@media (min-width: 480px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    font-size: 5rem;
+  }
+}
+
+/* ============================================
+   BOTTOM NAVIGATION (Mobile)
+   ============================================ */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 40;
+  padding-bottom: env(safe-area-inset-bottom);
+  backdrop-filter: blur(12px);
+  background: rgba(10, 10, 10, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 768px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* ============================================
+   FOOTER RESPONSIVE
+   ============================================ */
+
+footer {
+  width: 100%;
+  margin-top: auto;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 2rem;
+}
+
+@media (min-width: 480px) {
+  .footer-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media (min-width: 640px) {
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================
+   MODAL RESPONSIVE
+   ============================================ */
+
+.modal-container {
+  width: calc(100% - 2rem);
+  max-width: 500px;
+  max-height: 85vh;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .modal-container {
+    width: auto;
+    min-width: 400px;
+  }
+}
+
+@media (min-width: 768px) {
+  .modal-container {
+    min-width: 450px;
+  }
+}
+
+/* ============================================
+   FORM RESPONSIVE
+   ============================================ */
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* ============================================
+   STATS CARDS RESPONSIVE
+   ============================================ */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* ============================================
+   IMAGE RESPONSIVE
+   ============================================ */
+
 img, video, iframe {
   max-width: 100%;
   height: auto;
 }
 
-/* Fix for Tailwind margins on mobile */
-@media (max-width: 640px) {
-  .px-4 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+/* ============================================
+   OVERFLOW PREVENTION
+   ============================================ */
+
+.overflow-x-hidden {
+  overflow-x: hidden !important;
+}
+
+.max-w-full {
+  max-width: 100% !important;
+}
+
+/* ============================================
+   TOUCH OPTIMIZATIONS
+   ============================================ */
+
+@media (max-width: 767px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
-  .px-6 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-  .px-8 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-}
-
-/* Add to your index.css */
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Ensure footer stays at bottom */
-footer {
-  margin-top: auto;
-}
-
-/* Dashboard Footer Positioning */
-.dashboard-footer {
-  position: relative;
-  margin-left: 260px;
-  width: calc(100% - 260px);
-  background: #0A0A0A;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-@media (max-width: 768px) {
-  .dashboard-footer {
-    margin-left: 0;
-    width: 100%;
+  
+  button, a {
+    cursor: pointer;
+    -webkit-touch-callout: none;
   }
 }
 
-/* Ensure footer doesn't overlap content */
-.app-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(212, 175, 55, 0.3);
+  border-top-color: #D4AF37;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-.main-content {
-  flex: 1 0 auto;
-}
-
-/* Make sure dashboard content pushes footer down */
-.dashboard-main {
-  padding-bottom: 0;
-}
-
-.dashboard-content {
-  padding-bottom: 2rem;
-}
-
-/* Adjust footer for mobile dashboard */
-@media (max-width: 768px) {
-  .dashboard-footer {
-    margin-left: 0;
-    width: 100%;
+@media (min-width: 768px) {
+  .loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border-width: 4px;
   }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

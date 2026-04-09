@@ -1,6 +1,6 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react'
-import { supabase } from '../services/supabaseClient'
+import { supabase, checkAndFixAuth, resetAuthState } from '../services/supabaseClient'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext()
@@ -17,17 +17,30 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [authError, setAuthError] = useState(null)
 
   useEffect(() => {
+    let mounted = true
+    let authCheckAttempts = 0
+    const MAX_AUTH_ATTEMPTS = 3
+
     const initAuth = async () => {
       try {
         console.log('🔐 Initializing auth...')
         
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.error('Session error:', error)
+        // Check if we're stuck in an auth loop
+        const authAttempts = parseInt(sessionStorage.getItem('auth_attempts') || '0')
+        if (authAttempts > MAX_AUTH_ATTEMPTS) {
+          console.log('⚠️ Auth loop detected, resetting...')
+          await resetAuthState()
+          sessionStorage.setItem('auth_attempts', '0')
         }
+        
+        sessionStorage.setItem('auth_attempts', (authAttempts + 1).toString())
+        
+        const session = await checkAndFixAuth()
+        
+        if (!mounted) return
         
         if (session?.user) {
           console.log('✅ Session found for:', session.user.email)
@@ -37,12 +50,23 @@ export const AuthProvider = ({ children }) => {
           console.log('❌ No session found')
           setUser(null)
           setIsAdmin(false)
-          localStorage.removeItem('isAdmin')
         }
+        
+        // Reset auth attempts on success
+        sessionStorage.setItem('auth_attempts', '0')
+        
       } catch (error) {
         console.error('Auth init error:', error)
+        setAuthError(error.message)
+        
+        if (mounted) {
+          setUser(null)
+          setIsAdmin(false)
+        }
       } finally {
-        setLoading(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 
@@ -51,24 +75,40 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state changed:', event)
       
+      if (!mounted) return
+      
+      // Prevent rapid auth state changes
+      if (event === 'TOKEN_REFRESHED' && authCheckAttempts > 5) {
+        console.log('⚠️ Too many token refreshes, skipping...')
+        return
+      }
+      
+      authCheckAttempts++
+      
+      // Reset after 30 seconds
+      setTimeout(() => {
+        authCheckAttempts = 0
+      }, 30000)
+      
       if (event === 'SIGNED_OUT') {
         setUser(null)
         setIsAdmin(false)
-        localStorage.removeItem('isAdmin')
-      } else if (event === 'SIGNED_IN' && session?.user) {
+      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         setUser(session.user)
         await checkAdminStatus(session.user.id)
       }
+      
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const checkAdminStatus = async (userId) => {
     try {
-      console.log('Checking admin for user ID:', userId)
-      
       const { data, error } = await supabase
         .from('users')
         .select('role')
@@ -85,9 +125,6 @@ export const AuthProvider = ({ children }) => {
       console.log('👑 Is admin?', isUserAdmin)
       setIsAdmin(isUserAdmin)
       
-      if (isUserAdmin) {
-        localStorage.setItem('isAdmin', 'true')
-      }
     } catch (error) {
       console.error('Admin check error:', error)
       setIsAdmin(false)
@@ -107,9 +144,10 @@ export const AuthProvider = ({ children }) => {
         return { error: 'Username already taken' }
       }
 
+      const email = `${username}@giaqueenie.com`
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: `${username}@giaqueenie.com`,
-        password: password,
+        email,
+        password,
         options: {
           data: { username }
         }
@@ -123,7 +161,7 @@ export const AuthProvider = ({ children }) => {
           .insert([{
             id: authData.user.id,
             username: username,
-            email: `${username}@giaqueenie.com`,
+            email: email,
             role: 'user'
           }])
 
@@ -149,13 +187,20 @@ export const AuthProvider = ({ children }) => {
       console.log('🔑 Attempting login for:', email)
       
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+        email,
+        password
       })
 
       if (error) {
         console.error('Login error:', error.message)
-        toast.error('Invalid username or password')
+        
+        // Check if it's a network/auth error
+        if (error.message.includes('Invalid login') || error.status === 400) {
+          toast.error('Invalid username or password')
+        } else {
+          toast.error('Login failed. Please try again.')
+        }
+        
         throw error
       }
 
@@ -169,7 +214,6 @@ export const AuthProvider = ({ children }) => {
       return data
     } catch (error) {
       console.error('Login error:', error)
-      toast.error('Invalid username or password')
       throw error
     }
   }
@@ -180,13 +224,17 @@ export const AuthProvider = ({ children }) => {
       
       setUser(null)
       setIsAdmin(false)
-      localStorage.removeItem('isAdmin')
       
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      await supabase.auth.signOut()
+      
+      // Clear any lingering state
+      sessionStorage.clear()
       
       toast.success('Logged out successfully')
+      
+      // Force reload to clean state
       window.location.href = '/'
+      
     } catch (error) {
       console.error('Logout error:', error)
       toast.error('Error logging out')
@@ -197,6 +245,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAdmin,
+    authError,
     signUp,
     signIn,
     signOut

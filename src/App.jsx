@@ -20,7 +20,7 @@ const Services = lazy(() => import('./pages/Services'))
 const Admin = lazy(() => import('./pages/Admin'))
 const DynamicPage = lazy(() => import('./pages/DynamicPage'))
 const Cart = lazy(() => import('./pages/cart'))
-
+const Reset = lazy(() => import('./pages/Reset'))
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="w-12 h-12 border-4 border-primary-gold border-t-transparent rounded-full animate-spin" />
@@ -223,6 +223,7 @@ function AppContent() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard key={`dashboard-${dataVersion}`} /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><Admin key={`admin-${dataVersion}`} /></AdminRoute>} />
+              <Route path="/reset" element={<Reset />} />
               {dynamicPages.map(page => (
                 <Route key={page.slug} path={`/${page.slug}`} element={<DynamicPage slug={page.slug} />} />
               ))}

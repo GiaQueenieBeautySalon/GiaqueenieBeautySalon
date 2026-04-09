@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../services/supabaseClient'
 import { uploadToCloudinary, uploadMultipleToCloudinary, uploadVideoToCloudinary } from '../services/cloudinary'
 import toast from 'react-hot-toast'
-import { useRealtime } from '../hooks/useRealtime'
 import { 
   IoAnalyticsOutline, 
   IoPeopleOutline, 
@@ -67,54 +66,6 @@ const Admin = () => {
     monthlyRevenue: 0
   })
 
-    // ============================================
-  // REAL-TIME UPDATES - SAFE VERSION
-  // ============================================
-  
-  useRealtime('products', () => {
-    console.log('🔄 Products changed')
-    if (activeTab === 'products' || activeTab === 'analytics') {
-      setTimeout(() => fetchData(), 100)
-    }
-  })
-
-  useRealtime('services', () => {
-    console.log('🔄 Services changed')
-    if (activeTab === 'services' || activeTab === 'analytics') {
-      setTimeout(() => fetchData(), 100)
-    }
-  })
-
-  useRealtime('orders', () => {
-    console.log('🔄 Orders changed')
-    if (activeTab === 'orders' || activeTab === 'analytics') {
-      setTimeout(() => fetchData(), 100)
-    }
-  })
-
-  // Comment these out temporarily if still having issues
-  // useRealtime('users', () => {
-  //   console.log('🔄 Users changed')
-  //   if (activeTab === 'users' || activeTab === 'analytics') {
-  //     setTimeout(() => fetchData(), 100)
-  //   }
-  // })
-
-  // useRealtime('pages', () => {
-  //   console.log('🔄 Pages changed')
-  //   if (activeTab === 'pages') {
-  //     setTimeout(() => fetchData(), 100)
-  //   }
-  // })
-
-  // useRealtime('hero_media', () => {
-  //   console.log('🔄 Hero media changed')
-  //   if (activeTab === 'media') {
-  //     setTimeout(() => fetchData(), 100)
-  //   }
-  // })
-
-  // ============================================
 
   const menuItems = [
     { id: 'analytics', label: 'Analytics', icon: IoAnalyticsOutline, description: 'View store performance' },
